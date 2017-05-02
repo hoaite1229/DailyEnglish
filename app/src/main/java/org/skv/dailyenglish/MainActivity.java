@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
+        mViewPager.addOnPageChangeListener(new CircularViewPagerHandler(mViewPager));
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -105,7 +106,12 @@ public class MainActivity extends AppCompatActivity
         public static PlaceholderFragment newInstance(int sectionNumber) {
             PlaceholderFragment fragment = new PlaceholderFragment();
             Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
+            if(sectionNumber == 1)
+                args.putInt(ARG_SECTION_NUMBER, 5);
+            else if(sectionNumber == 7)
+                args.putInt(ARG_SECTION_NUMBER, 1);
+            else
+                args.putInt(ARG_SECTION_NUMBER, sectionNumber-1);
             fragment.setArguments(args);
             return fragment;
         }
@@ -139,23 +145,27 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         public int getCount() {
-            // Show 5 total pages.
-            return 5;
+            // Show 7 total pages.
+            return 7;
         }
 
         @Override
         public CharSequence getPageTitle(int position) {
             switch (position) {
                 case 0:
-                    return "SECTION 1";
-                case 1:
-                    return "SECTION 2";
-                case 2:
-                    return "SECTION 3";
-                case 3:
-                    return "SECTION 4";
-                case 4:
                     return "SECTION 5";
+                case 1:
+                    return "SECTION 1";
+                case 2:
+                    return "SECTION 2";
+                case 3:
+                    return "SECTION 3";
+                case 4:
+                    return "SECTION 4";
+                case 5:
+                    return "SECTION 5";
+                case 6:
+                    return "SECTION 1";
             }
             return null;
         }
@@ -194,5 +204,31 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public class CircularViewPagerHandler implements ViewPager.OnPageChangeListener {
+        private ViewPager mViewPager;
+
+        public CircularViewPagerHandler(final ViewPager viewPager) {
+            mViewPager = viewPager;
+        }
+
+        @Override
+        public void onPageSelected(final int position) {
+            final int lastPosition = mViewPager.getAdapter().getCount() - 1;
+            if (position == 0) {
+                mViewPager.setCurrentItem(lastPosition - 1, false);
+            } else if (position == lastPosition) {
+                mViewPager.setCurrentItem(1, false);
+            }
+        }
+
+        @Override
+        public void onPageScrollStateChanged(final int state) {
+        }
+
+        @Override
+        public void onPageScrolled(final int position, final float positionOffset, final int positionOffsetPixels) {
+        }
     }
 }
