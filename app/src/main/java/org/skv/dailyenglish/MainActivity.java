@@ -1,5 +1,11 @@
 package org.skv.dailyenglish;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.icu.util.Calendar;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -11,6 +17,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -35,6 +42,21 @@ public class MainActivity extends AppCompatActivity
      * The {@link ViewPager} that will host the section contents.
      */
     private ViewPager mViewPager;
+
+    // For Alarm Function
+    private static MainActivity inst;
+    AlarmManager alarmManager;
+    private PendingIntent pendingIntent;
+
+    public static MainActivity instance() {
+        return inst;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        inst = this;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +83,7 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
     }
 
 
@@ -199,11 +222,56 @@ public class MainActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_send) {
 
+        } else if (id == R.id.nav_alarm) {
+            Log.i("DailyEnglish", "ALARM BUTTON CLICK !!");
+            TimePickerFragment mTimePickerFragment = new TimePickerFragment(this);
+            mTimePickerFragment.show(getSupportFragmentManager(), "FRAGMENT_TAG");
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public boolean createAlarm(int hourOfDay, int minute) {
+        Log.i("DailyEnglish", "createAlarm!!!");
+        // alarmMgr = (AlarmManager)getSystemService(ALARM_SERVICE);
+        // Intent intent = new Intent(MainActivity.this, AlarmReceiver.class);
+        // alarmIntent = PendingIntent.getBroadcast(MainActivity.this, 0, intent, 0);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+        calendar.set(Calendar.MINUTE, minute);
+        calendar.set(Calendar.SECOND, 0);
+        // alarmMgr.setInexactRepeating(AlarmManager.RTC, calendar.getTimeInMillis(),
+        //         AlarmManager.INTERVAL_DAY, alarmIntent);
+        Intent myIntent = new Intent(MainActivity.this, AlarmReceiver.class);
+        pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, myIntent, 0);
+        alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+        Log.i("DailyEnglish", "alarm clock check : "+calendar.getTime().toString());
+
+        return true;
+    }
+
+    public void dialogSimple() {
+        AlertDialog.Builder alt_bld = new AlertDialog.Builder(this);
+        alt_bld.setMessage("Do you want to Stop Ringing ?").setCancelable(
+                false).setPositiveButton("Yes",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        // Action for 'Yes' Button
+                        Log.i("DailyEnglish", "Alarm Off 111 ");
+                        AlarmReceiver.stopRinging();
+
+                    }
+                });
+        AlertDialog alert = alt_bld.create();
+        // Title for AlertDialog
+        alert.setTitle("Title");
+        // Icon for AlertDialog
+        alert.setIcon(R.drawable.ic_menu_gallery);
+        alert.show();
     }
 
     public class CircularViewPagerHandler implements ViewPager.OnPageChangeListener {
