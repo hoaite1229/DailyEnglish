@@ -23,6 +23,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity
@@ -72,6 +73,7 @@ public class MainActivity extends AppCompatActivity
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
+        mViewPager.setCurrentItem(1);
         mViewPager.addOnPageChangeListener(new CircularViewPagerHandler(mViewPager));
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -84,6 +86,22 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+
+        Button leftButton = (Button) findViewById(R.id.leftButton);
+        leftButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);
+            }
+        });
+
+        Button rightButton = (Button) findViewById(R.id.rightButton);
+        rightButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1);
+            }
+        });
     }
 
 
@@ -283,16 +301,18 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         public void onPageSelected(final int position) {
-            final int lastPosition = mViewPager.getAdapter().getCount() - 1;
-            if (position == 0) {
-                mViewPager.setCurrentItem(lastPosition - 1, false);
-            } else if (position == lastPosition) {
-                mViewPager.setCurrentItem(1, false);
-            }
         }
 
         @Override
         public void onPageScrollStateChanged(final int state) {
+            final int lastPosition = mViewPager.getAdapter().getCount() - 1;
+            if (state == ViewPager.SCROLL_STATE_IDLE) {
+                if (mViewPager.getCurrentItem() == 0) {
+                    mViewPager.setCurrentItem(lastPosition -1, false);
+                } else if (mViewPager.getCurrentItem() == lastPosition) {
+                    mViewPager.setCurrentItem(1, false);
+                }
+            }
         }
 
         @Override
