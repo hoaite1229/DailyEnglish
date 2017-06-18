@@ -1,8 +1,9 @@
 package org.skv.dailyenglish;
 
 import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.icu.util.Calendar;
@@ -25,6 +26,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.CognitoCachingCredentialsProvider;
+import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -49,6 +57,9 @@ public class MainActivity extends AppCompatActivity
     AlarmManager alarmManager;
     private PendingIntent pendingIntent;
 
+    DynamoDBMapper mapper;
+    Context context;
+
     public static MainActivity instance() {
         return inst;
     }
@@ -57,6 +68,15 @@ public class MainActivity extends AppCompatActivity
     public void onStart() {
         super.onStart();
         inst = this;
+
+        Runnable runnable = new Runnable() {
+            public void run() {
+                Word word = mapper.load(Word.class, 1);
+                Log.d("SK-DEBUG", word.getNumber() + ". " +  word.getWord() + "[" + word.getPronunciation() + "] \n" + word.getMeaning() + "\n" + word.getSentence());
+            }
+        };
+        Thread thread = new Thread(runnable);
+        thread.start();
     }
 
     @Override
@@ -66,6 +86,10 @@ public class MainActivity extends AppCompatActivity
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        credentialsProvider();
+        context = this;
+
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
@@ -103,7 +127,6 @@ public class MainActivity extends AppCompatActivity
             }
         });
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -318,5 +341,22 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onPageScrolled(final int position, final float positionOffset, final int positionOffsetPixels) {
         }
+    }
+
+    public void credentialsProvider() {
+        // Initialize the Amazon Cognito credentials provider
+        String IDENTITY_POOL = "";
+        CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
+                getApplicationContext(),
+                IDENTITY_POOL, // Identity Pool ID
+                Regions.AP_NORTHEAST_2 // Region
+        );
+
+        setAmazonClient(credentialsProvider);
+    }
+
+    public void setAmazonClient(CognitoCachingCredentialsProvider credentialsProvider) {
+        AmazonDynamoDBClient ddbClient = Region.getRegion(Regions.AP_NORTHEAST_2).createClient(AmazonDynamoDBClient.class, credentialsProvider, new ClientConfiguration());
+        mapper = new DynamoDBMapper(ddbClient);
     }
 }
