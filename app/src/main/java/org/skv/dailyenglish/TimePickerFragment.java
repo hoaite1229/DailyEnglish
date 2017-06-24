@@ -2,14 +2,15 @@ package org.skv.dailyenglish;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.icu.util.Calendar;
+import android.app.TimePickerDialog;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
-import android.app.TimePickerDialog;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.widget.TimePicker;
+
+import java.util.Calendar;
 
 /**
  * Created by keviny.seo on 2017. 4. 29..
@@ -18,7 +19,7 @@ import android.widget.TimePicker;
 public class TimePickerFragment extends DialogFragment implements TimePickerDialog.OnTimeSetListener {
     private MainActivity mainActivity;
 
-    public TimePickerFragment(MainActivity mainAct) {
+    public void setActivity(MainActivity mainAct) {
         mainActivity = mainAct;
     }
 

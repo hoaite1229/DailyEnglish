@@ -33,7 +33,15 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -72,8 +80,29 @@ public class MainActivity extends AppCompatActivity
 
         Runnable runnable = new Runnable() {
             public void run() {
-                Word word = mapper.load(Word.class, 1);
-                Log.d("SK-DEBUG", word.getNumber() + ". " +  word.getWord() + "[" + word.getPronunciation() + "] \n" + word.getMeaning() + "\n" + word.getSentence());
+                String fileName = "word.txt";
+                File file= context.getFileStreamPath(fileName);
+                if(file.exists()) {
+                    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
+                    String timeReset = formatter.format(file.lastModified());
+                    try {
+                        Date lastModified = formatter.parse(timeReset);
+                        Date currentDate = new Date();
+                        long diff = currentDate.getTime() - lastModified.getTime();
+
+                        if(diff > (30 * 60 * 60 * 1000)) {
+                            saveWordData(fileName, getApplicationContext());
+                            loadWordData(fileName, getApplicationContext());
+                        } else {
+                            loadWordData(fileName, getApplicationContext());
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    saveWordData(fileName, getApplicationContext());
+                    loadWordData(fileName, getApplicationContext());
+                }
             }
         };
         Thread thread = new Thread(runnable);
@@ -117,6 +146,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);
+                Log.i("SK-DEBUG", "Left Button is Clicked");
             }
         });
 
@@ -125,6 +155,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1);
+                Log.i("SK-DEBUG", "Right Button is Clicked");
             }
         });
     }
@@ -266,7 +297,8 @@ public class MainActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_alarm) {
             Log.i("DailyEnglish", "ALARM BUTTON CLICK !!");
-            TimePickerFragment mTimePickerFragment = new TimePickerFragment(this);
+            TimePickerFragment mTimePickerFragment = new TimePickerFragment();
+            mTimePickerFragment.setActivity(this);
             mTimePickerFragment.show(getSupportFragmentManager(), "FRAGMENT_TAG");
         }
 
@@ -344,7 +376,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public void credentialsProvider() {
+    private void credentialsProvider() {
         // Initialize the Amazon Cognito credentials provider
         String IDENTITY_POOL = "";
         CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
@@ -356,8 +388,38 @@ public class MainActivity extends AppCompatActivity
         setAmazonClient(credentialsProvider);
     }
 
-    public void setAmazonClient(CognitoCachingCredentialsProvider credentialsProvider) {
+    private void setAmazonClient(CognitoCachingCredentialsProvider credentialsProvider) {
         AmazonDynamoDBClient ddbClient = Region.getRegion(Regions.AP_NORTHEAST_2).createClient(AmazonDynamoDBClient.class, credentialsProvider, new ClientConfiguration());
         mapper = new DynamoDBMapper(ddbClient);
+    }
+
+    private void saveWordData(String fileName, Context context) {
+        try {
+            Word word = mapper.load(Word.class, 1);
+            String string = word.getNumber() + "\n" + word.getWord() + "\n" + word.getPronunciation() + "\n" + word.getMeaning() + "\n" + word.getSentence() + "\n";
+            Log.d("SK-DEBUG", word.getNumber() + ". " +  word.getWord() + "[" + word.getPronunciation() + "] \n" + word.getMeaning() + "\n" + word.getSentence());
+
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
+            outputStreamWriter.write(string);
+            outputStreamWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadWordData(String fileName, Context context) {
+        try {
+            InputStream inputStream = context.openFileInput(fileName);
+            if(inputStream != null) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receivedString = null;
+                while ((receivedString = bufferedReader.readLine()) != null) {
+                    Log.d("SK-DEBUG", receivedString);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
