@@ -88,13 +88,20 @@ public class MainActivity extends AppCompatActivity
                     try {
                         Date lastModified = formatter.parse(timeReset);
                         Date currentDate = new Date();
-                        long diff = currentDate.getTime() - lastModified.getTime();
 
-                        if(diff > (30 * 60 * 60 * 1000)) {
-                            saveWordData(fileName, getApplicationContext());
-                            loadWordData(fileName, getApplicationContext());
+                        long diff = currentDate.getTime() - lastModified.getTime();
+                        long diffDay = ( currentDate.getTime() / (24 * 60 * 60 * 1000) ) - ( lastModified.getTime() / (24 * 60 * 60 * 1000) );
+                        long diffTime = 0;
+                        if(diffDay == 0)
+                            diffTime = 6 * 60 * 60 * 1000;
+                        else
+                            diffTime = 30 * 60 * 60 * 1000;
+
+                        if(diff > diffTime) {
+                            //saveWordData(fileName, getApplicationContext());
+                            //loadWordData(fileName, getApplicationContext());
                         } else {
-                            loadWordData(fileName, getApplicationContext());
+                            //loadWordData(fileName, getApplicationContext());
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -146,7 +153,6 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);
-                Log.i("SK-DEBUG", "Left Button is Clicked");
             }
         });
 
@@ -155,7 +161,6 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1);
-                Log.i("SK-DEBUG", "Right Button is Clicked");
             }
         });
     }
