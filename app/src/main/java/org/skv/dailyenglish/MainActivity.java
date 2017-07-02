@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -45,7 +46,8 @@ import java.util.Date;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
-
+    static String receivedWord[] = new String[5];
+    static String receivedExplanation[] = new String[5];
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
      * fragments for each of the sections. We use a
@@ -77,43 +79,6 @@ public class MainActivity extends AppCompatActivity
     public void onStart() {
         super.onStart();
         inst = this;
-
-        Runnable runnable = new Runnable() {
-            public void run() {
-                String fileName = "word.txt";
-                File file= context.getFileStreamPath(fileName);
-                if(file.exists()) {
-                    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
-                    String timeReset = formatter.format(file.lastModified());
-                    try {
-                        Date lastModified = formatter.parse(timeReset);
-                        Date currentDate = new Date();
-
-                        long diff = currentDate.getTime() - lastModified.getTime();
-                        long diffDay = ( currentDate.getTime() / (24 * 60 * 60 * 1000) ) - ( lastModified.getTime() / (24 * 60 * 60 * 1000) );
-                        long diffTime = 0;
-                        if(diffDay == 0)
-                            diffTime = 6 * 60 * 60 * 1000;
-                        else
-                            diffTime = 30 * 60 * 60 * 1000;
-
-                        if(diff > diffTime) {
-                            //saveWordData(fileName, getApplicationContext());
-                            //loadWordData(fileName, getApplicationContext());
-                        } else {
-                            //loadWordData(fileName, getApplicationContext());
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    saveWordData(fileName, getApplicationContext());
-                    loadWordData(fileName, getApplicationContext());
-                }
-            }
-        };
-        Thread thread = new Thread(runnable);
-        thread.start();
     }
 
     @Override
@@ -126,6 +91,8 @@ public class MainActivity extends AppCompatActivity
 
         credentialsProvider();
         context = this;
+
+        processFile(context);
 
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
@@ -208,11 +175,11 @@ public class MainActivity extends AppCompatActivity
             PlaceholderFragment fragment = new PlaceholderFragment();
             Bundle args = new Bundle();
             if(sectionNumber == 1)
-                args.putInt(ARG_SECTION_NUMBER, 5);
+                args.putInt(ARG_SECTION_NUMBER, 4);
             else if(sectionNumber == 7)
-                args.putInt(ARG_SECTION_NUMBER, 1);
+                args.putInt(ARG_SECTION_NUMBER, 0);
             else
-                args.putInt(ARG_SECTION_NUMBER, sectionNumber-1);
+                args.putInt(ARG_SECTION_NUMBER, sectionNumber-2);
             fragment.setArguments(args);
             return fragment;
         }
@@ -221,8 +188,13 @@ public class MainActivity extends AppCompatActivity
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-            textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
+            Typeface typeFace = Typeface.createFromAsset(rootView.getContext().getAssets(), "fonts/Voces_Regular.ttf");
+            TextView textView1 = (TextView) rootView.findViewById(R.id.word_textView);
+            textView1.setTypeface(typeFace);
+            textView1.setText(receivedWord[getArguments().getInt(ARG_SECTION_NUMBER)]);
+            TextView textView2 = (TextView) rootView.findViewById(R.id.explanation_textView);
+            textView2.setTypeface(typeFace);
+            textView2.setText(receivedExplanation[getArguments().getInt(ARG_SECTION_NUMBER)]);
             return rootView;
         }
     }
@@ -398,17 +370,43 @@ public class MainActivity extends AppCompatActivity
         mapper = new DynamoDBMapper(ddbClient);
     }
 
-    private void saveWordData(String fileName, Context context) {
-        try {
-            Word word = mapper.load(Word.class, 1);
-            String string = word.getNumber() + "\n" + word.getWord() + "\n" + word.getPronunciation() + "\n" + word.getMeaning() + "\n" + word.getSentence() + "\n";
-            Log.d("SK-DEBUG", word.getNumber() + ". " +  word.getWord() + "[" + word.getPronunciation() + "] \n" + word.getMeaning() + "\n" + word.getSentence());
+    private void processFile (Context context) {
+        String fileName = "word.txt";
+        File file= context.getFileStreamPath(fileName);
+        if(file.exists()) {
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
+            String timeReset = formatter.format(file.lastModified());
+            try {
+                Date lastModified = formatter.parse(timeReset);
+                Date currentDate = new Date();
 
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
-            outputStreamWriter.write(string);
-            outputStreamWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+                long diff = currentDate.getTime() - lastModified.getTime();
+                long diffDay = ( currentDate.getTime() / (24 * 60 * 60 * 1000) ) - ( lastModified.getTime() / (24 * 60 * 60 * 1000) );
+                long diffTime = 0;
+                if(diffDay == 0)
+                    diffTime = 6 * 60 * 60 * 1000;
+                else
+                    diffTime = 30 * 60 * 60 * 1000;
+                if(diff > diffTime) {
+                    ServerThread thread = new ServerThread(fileName, context);
+                    thread.start();
+                    thread.join();
+                    loadWordData(fileName, context);
+                } else {
+                    loadWordData(fileName, context);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                ServerThread thread = new ServerThread(fileName, context);
+                thread.start();
+                thread.join();
+                loadWordData(fileName, context);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -418,13 +416,72 @@ public class MainActivity extends AppCompatActivity
             if(inputStream != null) {
                 InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
                 BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-                String receivedString = null;
+                String receivedString;
+
+                int i = 0;
+                String string = "";
                 while ((receivedString = bufferedReader.readLine()) != null) {
-                    Log.d("SK-DEBUG", receivedString);
+                    if(i % 5 != 0) {
+                        string += receivedString;
+
+                        if(i % 5 == 1) {
+                            receivedWord[i/5] = string;
+                            string = "";
+                        } else if(i % 5 == 4) {
+                            receivedExplanation[i/5] = string;
+                            string = "";
+                        } else
+                            string += "\n";
+                    }
+                    i++;
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public class ServerThread extends Thread {
+        String fileName = null;
+        Context context = null;
+
+        public ServerThread(String fileName, Context context) {
+            this.fileName = fileName;
+            this.context = context;
+        }
+
+        private void saveWordData(String fileName, Context context) {
+            try {
+                OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
+
+                Word word = mapper.load(Word.class, 1);
+                String string = word.getNumber() + "\n" + word.getWord() + "\n" + word.getPronunciation() + "\n" + word.getMeaning() + "\n" + word.getSentence() + "\n";
+                outputStreamWriter.write(string);
+
+                word = mapper.load(Word.class, 2);
+                string = word.getNumber() + "\n" + word.getWord() + "\n" + word.getPronunciation() + "\n" + word.getMeaning() + "\n" + word.getSentence() + "\n";
+                outputStreamWriter.write(string);
+
+                word = mapper.load(Word.class, 3);
+                string = word.getNumber() + "\n" + word.getWord() + "\n" + word.getPronunciation() + "\n" + word.getMeaning() + "\n" + word.getSentence() + "\n";
+                outputStreamWriter.write(string);
+
+                word = mapper.load(Word.class, 4);
+                string = word.getNumber() + "\n" + word.getWord() + "\n" + word.getPronunciation() + "\n" + word.getMeaning() + "\n" + word.getSentence() + "\n";
+                outputStreamWriter.write(string);
+
+                word = mapper.load(Word.class, 5);
+                string = word.getNumber() + "\n" + word.getWord() + "\n" + word.getPronunciation() + "\n" + word.getMeaning() + "\n" + word.getSentence() + "\n";
+                outputStreamWriter.write(string);
+
+                outputStreamWriter.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void run() {
+            //saveWordData(fileName, context);
         }
     }
 }
