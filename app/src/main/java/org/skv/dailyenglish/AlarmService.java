@@ -1,6 +1,7 @@
 package org.skv.dailyenglish;
 
 import android.app.IntentService;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -14,6 +15,7 @@ import android.util.Log;
 
 public class AlarmService extends IntentService {
     private NotificationManager alarmNotificationManager;
+    Intent push;
 
     public AlarmService() {
         super("AlarmService");
@@ -29,16 +31,20 @@ public class AlarmService extends IntentService {
         alarmNotificationManager = (NotificationManager) this
                 .getSystemService(Context.NOTIFICATION_SERVICE);
 
+        push = new Intent();
+        push.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        push.setClass(this, MainActivity.class);
+        push.putExtra("ringing", true);
+
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                new Intent(this, MainActivity.class), 0);
+                push, PendingIntent.FLAG_CANCEL_CURRENT);
 
         NotificationCompat.Builder alamNotificationBuilder = new NotificationCompat.Builder(
                 this).setContentTitle("Alarm").setSmallIcon(R.drawable.ic_add_alert_black_24dp)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(msg))
                 .setContentText(msg);
-
-
-        alamNotificationBuilder.setContentIntent(contentIntent);
+        alamNotificationBuilder.setPriority(Notification.PRIORITY_HIGH);
+        alamNotificationBuilder.setFullScreenIntent(contentIntent, true);
         alarmNotificationManager.notify(1, alamNotificationBuilder.build());
         Log.i("AlarmService", "Notification sent.");
     }

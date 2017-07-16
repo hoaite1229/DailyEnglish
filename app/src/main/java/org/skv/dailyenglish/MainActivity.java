@@ -86,6 +86,18 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // if ringing, popup dialog.
+        Intent intent = getIntent();
+        if (intent.hasExtra("ringing")) {
+            boolean ringing = intent.getExtras().getBoolean("ringing");
+            if (ringing) {
+                Log.i("MainActivity", "ringing is true");
+                dialogSimple();
+            } else {
+                Log.i("MainActivity", "ringing is false");
+            }
+        }
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -130,6 +142,12 @@ public class MainActivity extends AppCompatActivity
                 mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1);
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.i("keviny", "call onResume");
     }
 
     @Override
@@ -286,17 +304,13 @@ public class MainActivity extends AppCompatActivity
 
     public boolean createAlarm(int hourOfDay, int minute) {
         Log.i("DailyEnglish", "createAlarm!!!");
-        // alarmMgr = (AlarmManager)getSystemService(ALARM_SERVICE);
-        // Intent intent = new Intent(MainActivity.this, AlarmReceiver.class);
-        // alarmIntent = PendingIntent.getBroadcast(MainActivity.this, 0, intent, 0);
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(System.currentTimeMillis());
         calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
         calendar.set(Calendar.MINUTE, minute);
         calendar.set(Calendar.SECOND, 0);
-        // alarmMgr.setInexactRepeating(AlarmManager.RTC, calendar.getTimeInMillis(),
-        //         AlarmManager.INTERVAL_DAY, alarmIntent);
+
         Intent myIntent = new Intent(MainActivity.this, AlarmReceiver.class);
         pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, myIntent, 0);
         alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
