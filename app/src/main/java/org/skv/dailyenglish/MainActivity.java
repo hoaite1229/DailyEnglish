@@ -26,13 +26,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.CognitoCachingCredentialsProvider;
-import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -44,10 +45,17 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+import static org.skv.dailyenglish.ParseJSON.words;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+    public static final String JSON_URL = "http://kevinynas.synology.me/dailyenglish/getword.php";
+
     static String receivedWord[] = new String[5];
     static String receivedExplanation[] = new String[5];
+
+    private boolean isUpdated = false;
+
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
      * fragments for each of the sections. We use a
@@ -68,7 +76,6 @@ public class MainActivity extends AppCompatActivity
     AlarmManager alarmManager;
     private PendingIntent pendingIntent;
 
-    DynamoDBMapper mapper;
     Context context;
 
     public static MainActivity instance() {
@@ -101,7 +108,6 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        credentialsProvider();
         context = this;
 
         processFile(context);
@@ -260,6 +266,15 @@ public class MainActivity extends AppCompatActivity
             }
             return null;
         }
+
+        @Override
+        public int getItemPosition(Object object) {
+            if(isUpdated()) {
+                return POSITION_NONE;
+            } else {
+                return POSITION_UNCHANGED;
+            }
+        }
     }
 
     @Override
@@ -367,23 +382,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void credentialsProvider() {
-        // Initialize the Amazon Cognito credentials provider
-        String IDENTITY_POOL = "";
-        CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
-                getApplicationContext(),
-                IDENTITY_POOL, // Identity Pool ID
-                Regions.AP_NORTHEAST_2 // Region
-        );
-
-        setAmazonClient(credentialsProvider);
-    }
-
-    private void setAmazonClient(CognitoCachingCredentialsProvider credentialsProvider) {
-        AmazonDynamoDBClient ddbClient = Region.getRegion(Regions.AP_NORTHEAST_2).createClient(AmazonDynamoDBClient.class, credentialsProvider, new ClientConfiguration());
-        mapper = new DynamoDBMapper(ddbClient);
-    }
-
     private void processFile (Context context) {
         String fileName = "word.txt";
         File file= context.getFileStreamPath(fileName);
@@ -395,36 +393,30 @@ public class MainActivity extends AppCompatActivity
                 Date currentDate = new Date();
 
                 long diff = currentDate.getTime() - lastModified.getTime();
-                long diffDay = ( currentDate.getTime() / (24 * 60 * 60 * 1000) ) - ( lastModified.getTime() / (24 * 60 * 60 * 1000) );
+                float diffDay = ( currentDate.getTime() - lastModified.getTime() ) / (24 * 60 * 60 * 1000);
                 long diffTime = 0;
-                if(diffDay == 0)
+                if(diffDay < 1)
                     diffTime = 6 * 60 * 60 * 1000;
                 else
                     diffTime = 30 * 60 * 60 * 1000;
-                if(diff > diffTime) {
-                    ServerThread thread = new ServerThread(fileName, context);
-                    thread.start();
-                    thread.join();
-                    loadWordData(fileName, context);
-                } else {
-                    loadWordData(fileName, context);
-                }
+
+                if(diff > diffTime)
+                    getDataFromServer(fileName, context);
+                else
+                    loadDataFromFile(fileName, context);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
             try {
-                ServerThread thread = new ServerThread(fileName, context);
-                thread.start();
-                thread.join();
-                loadWordData(fileName, context);
+                getDataFromServer(fileName, context);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
 
-    private void loadWordData(String fileName, Context context) {
+    private void loadDataFromFile(String fileName, Context context) {
         try {
             InputStream inputStream = context.openFileInput(fileName);
             if(inputStream != null) {
@@ -455,47 +447,56 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public class ServerThread extends Thread {
-        String fileName = null;
-        Context context = null;
+    private void saveDataToFile(String fileName, Context context, Integer[] numbers, String[] words, String[] pronunciations, String[] meanings, String[] sentences) {
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
+            String string = "";
 
-        public ServerThread(String fileName, Context context) {
-            this.fileName = fileName;
-            this.context = context;
-        }
-
-        private void saveWordData(String fileName, Context context) {
-            try {
-                OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
-
-                Word word = mapper.load(Word.class, 1);
-                String string = word.getNumber() + "\n" + word.getWord() + "\n" + word.getPronunciation() + "\n" + word.getMeaning() + "\n" + word.getSentence() + "\n";
+            for(int i=0; i<5; i++) {
+                string = numbers[i] + "\n" + words[i] + "\n" + pronunciations[i] + "\n" + meanings[i] + "\n" + sentences[i] + "\n";
                 outputStreamWriter.write(string);
-
-                word = mapper.load(Word.class, 2);
-                string = word.getNumber() + "\n" + word.getWord() + "\n" + word.getPronunciation() + "\n" + word.getMeaning() + "\n" + word.getSentence() + "\n";
-                outputStreamWriter.write(string);
-
-                word = mapper.load(Word.class, 3);
-                string = word.getNumber() + "\n" + word.getWord() + "\n" + word.getPronunciation() + "\n" + word.getMeaning() + "\n" + word.getSentence() + "\n";
-                outputStreamWriter.write(string);
-
-                word = mapper.load(Word.class, 4);
-                string = word.getNumber() + "\n" + word.getWord() + "\n" + word.getPronunciation() + "\n" + word.getMeaning() + "\n" + word.getSentence() + "\n";
-                outputStreamWriter.write(string);
-
-                word = mapper.load(Word.class, 5);
-                string = word.getNumber() + "\n" + word.getWord() + "\n" + word.getPronunciation() + "\n" + word.getMeaning() + "\n" + word.getSentence() + "\n";
-                outputStreamWriter.write(string);
-
-                outputStreamWriter.close();
-            } catch (IOException e) {
-                e.printStackTrace();
             }
+            outputStreamWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+    }
 
-        public void run() {
-            //saveWordData(fileName, context);
-        }
+    private void setUpdated(boolean updated) {
+        isUpdated = updated;
+    }
+
+    private boolean isUpdated() {
+        return isUpdated;
+    }
+
+    private void processJSON(String fileName, Context context, String json) {
+        ParseJSON pj = new ParseJSON(json);
+        pj.parseJSON();
+
+        saveDataToFile(fileName, context, ParseJSON.numbers, words, ParseJSON.pronunciations, ParseJSON.meanings, ParseJSON.sentences);
+        loadDataFromFile(fileName, context);
+
+        setUpdated(true);
+        mViewPager.getAdapter().notifyDataSetChanged();
+    }
+
+    private void getDataFromServer(final String fileName, final Context context) {
+        StringRequest request = new StringRequest(Request.Method.GET, JSON_URL,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        processJSON(fileName, context, response);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
+
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
+        requestQueue.add(request);
     }
 }

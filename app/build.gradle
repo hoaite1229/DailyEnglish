@@ -5,7 +5,7 @@ android {
     buildToolsVersion "25.0.2"
     defaultConfig {
         applicationId "org.skv.dailyenglish"
-        minSdkVersion 24
+        minSdkVersion 15
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
@@ -33,4 +33,6 @@ dependencies {
     compile 'com.amazonaws:aws-android-sdk-ec2:2.2.+'
     compile 'com.amazonaws:aws-android-sdk-ddb:2.2.+'
     compile 'com.amazonaws:aws-android-sdk-ddb-mapper:2.2.+'
+
+    compile 'com.android.volley:volley:1.0.0'
 }
