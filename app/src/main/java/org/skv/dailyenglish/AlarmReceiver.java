@@ -10,6 +10,7 @@ import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.support.v4.content.WakefulBroadcastReceiver;
+import android.util.Log;
 
 /**
  * Created by keviny.seo on 2017. 4. 29..
@@ -24,6 +25,7 @@ public class AlarmReceiver extends WakefulBroadcastReceiver {
 
     @Override
     public void onReceive(final Context context, Intent intent) {
+        Log.i("AlarmReceiver", "onReceive Alarm!!");
         //this will sound the alarm tone
         //this will sound the alarm once, if you wish to
         //raise alarm in loop continuously then use MediaPlayer and setLooping(true)
@@ -32,7 +34,8 @@ public class AlarmReceiver extends WakefulBroadcastReceiver {
             alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         }
         ringtone = RingtoneManager.getRingtone(context, alarmUri);
-        ringtone.play();
+        if (!ringtone.isPlaying())
+            ringtone.play();
 
         //this will send a notification message
         ComponentName comp = new ComponentName(context.getPackageName(),
@@ -41,10 +44,10 @@ public class AlarmReceiver extends WakefulBroadcastReceiver {
         setResultCode(Activity.RESULT_OK);
 
         //this will update the UI with message
-        MainActivity inst = MainActivity.instance();
-        if (inst != null) {
-            inst.dialogSimple();
-        }
+        // MainActivity inst = MainActivity.instance();
+        // if (inst != null) {
+        //     inst.dialogSimple();
+        // }
     }
 
     public static void stopRinging() {

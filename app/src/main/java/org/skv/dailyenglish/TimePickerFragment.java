@@ -18,6 +18,7 @@ import java.util.Calendar;
 
 public class TimePickerFragment extends DialogFragment implements TimePickerDialog.OnTimeSetListener {
     private MainActivity mainActivity;
+    boolean timeSetting = false;
 
     public void setActivity(MainActivity mainAct) {
         mainActivity = mainAct;
@@ -26,12 +27,15 @@ public class TimePickerFragment extends DialogFragment implements TimePickerDial
     @Override
     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
         Log.i("TimePickerFragment", "OnTimeSet Call");
-        mainActivity.createAlarm(hourOfDay, minute);
+        if (timeSetting == false)
+            mainActivity.createAlarm(hourOfDay, minute);
+        timeSetting = true;
     }
 
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+        timeSetting = false;
         Calendar mCalendar = Calendar.getInstance();
         int hour = mCalendar.get(Calendar.HOUR_OF_DAY);
         int min = mCalendar.get(Calendar.MINUTE);
