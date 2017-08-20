@@ -34,6 +34,10 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.NativeExpressAdView;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -44,8 +48,6 @@ import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-
-import static org.skv.dailyenglish.ParseJSON.words;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -111,6 +113,8 @@ public class MainActivity extends AppCompatActivity
         context = this;
 
         processFile(context);
+
+        MobileAds.initialize(this, "");
 
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
@@ -199,8 +203,8 @@ public class MainActivity extends AppCompatActivity
             PlaceholderFragment fragment = new PlaceholderFragment();
             Bundle args = new Bundle();
             if(sectionNumber == 1)
-                args.putInt(ARG_SECTION_NUMBER, 4);
-            else if(sectionNumber == 7)
+                args.putInt(ARG_SECTION_NUMBER, 5);
+            else if(sectionNumber == 8)
                 args.putInt(ARG_SECTION_NUMBER, 0);
             else
                 args.putInt(ARG_SECTION_NUMBER, sectionNumber-2);
@@ -212,13 +216,54 @@ public class MainActivity extends AppCompatActivity
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            Typeface typeFace = Typeface.createFromAsset(rootView.getContext().getAssets(), "fonts/Voces_Regular.ttf");
-            TextView textView1 = (TextView) rootView.findViewById(R.id.word_textView);
-            textView1.setTypeface(typeFace);
-            textView1.setText(receivedWord[getArguments().getInt(ARG_SECTION_NUMBER)]);
-            TextView textView2 = (TextView) rootView.findViewById(R.id.explanation_textView);
-            textView2.setTypeface(typeFace);
-            textView2.setText(receivedExplanation[getArguments().getInt(ARG_SECTION_NUMBER)]);
+            if(getArguments().getInt(ARG_SECTION_NUMBER) != 5) {
+                Typeface typeFace = Typeface.createFromAsset(rootView.getContext().getAssets(), "fonts/Voces_Regular.ttf");
+                TextView textView1 = (TextView) rootView.findViewById(R.id.word_textView);
+                textView1.setTypeface(typeFace);
+                textView1.setText(receivedWord[getArguments().getInt(ARG_SECTION_NUMBER)]);
+                TextView textView2 = (TextView) rootView.findViewById(R.id.explanation_textView);
+                textView2.setTypeface(typeFace);
+                textView2.setText(receivedExplanation[getArguments().getInt(ARG_SECTION_NUMBER)]);
+            } else {
+                NativeExpressAdView adView = (NativeExpressAdView)rootView.findViewById(R.id.adView);
+
+                AdRequest request = new AdRequest.Builder().build();
+                adView.loadAd(request);
+
+                adView.setAdListener(new AdListener() {
+                    @Override
+                    public void onAdLoaded() {
+                        // Code to be executed when an ad finishes loading.
+                        Log.i("SK-DEBUG", "onAdLoaded");
+                    }
+
+                    @Override
+                    public void onAdFailedToLoad(int errorCode) {
+                        // Code to be executed when an ad request fails.
+                        Log.i("SK-DEBUG", "onAdFailedToLoad : " + errorCode);
+                    }
+
+                    @Override
+                    public void onAdOpened() {
+                        // Code to be executed when an ad opens an overlay that
+                        // covers the screen.
+                        Log.i("SK-DEBUG", "onAdOpened");
+                    }
+
+                    @Override
+                    public void onAdLeftApplication() {
+                        // Code to be executed when the user has left the app.
+                        Log.i("SK-DEBUG", "onAdLeftApplication");
+                    }
+
+                    @Override
+                    public void onAdClosed() {
+                        // Code to be executed when when the user is about to return
+                        // to the app after tapping on an ad.
+                        Log.i("SK-DEBUG", "onAdClosed");
+                    }
+                });
+            }
             return rootView;
         }
     }
@@ -243,7 +288,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public int getCount() {
             // Show 7 total pages.
-            return 7;
+            return 8;
         }
 
         @Override
@@ -262,6 +307,8 @@ public class MainActivity extends AppCompatActivity
                 case 5:
                     return "SECTION 5";
                 case 6:
+                    return "SECTION 6";
+                case 7:
                     return "SECTION 1";
             }
             return null;
@@ -474,7 +521,7 @@ public class MainActivity extends AppCompatActivity
         ParseJSON pj = new ParseJSON(json);
         pj.parseJSON();
 
-        saveDataToFile(fileName, context, ParseJSON.numbers, words, ParseJSON.pronunciations, ParseJSON.meanings, ParseJSON.sentences);
+        saveDataToFile(fileName, context, ParseJSON.numbers, ParseJSON.words, ParseJSON.pronunciations, ParseJSON.meanings, ParseJSON.sentences);
         loadDataFromFile(fileName, context);
 
         setUpdated(true);

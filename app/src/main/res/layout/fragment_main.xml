@@ -8,28 +8,39 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="org.skv.dailyenglish.MainActivity$PlaceholderFragment">
 
+    <com.google.android.gms.ads.NativeExpressAdView
+        xmlns:ads="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/adView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        ads:adUnitId="ca-app-pub-3940256099942544/6300978111"
+        ads:adSize="FLUID">
+    </com.google.android.gms.ads.NativeExpressAdView>
+
     <TextView
         android:id="@+id/word_textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_above="@+id/explanation_textView"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
         android:paddingLeft="50dp"
         android:paddingRight="50dp"
         android:textColor="@android:color/black"
         android:textSize="45sp"
-        android:textStyle="bold"
-        android:layout_above="@+id/explanation_textView"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true"/>
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/explanation_textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
         android:paddingLeft="50dp"
         android:paddingRight="50dp"
         android:textColor="@android:color/black"
-        android:textSize="17sp"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true" />
+        android:textSize="17sp" />
 
 </RelativeLayout>
