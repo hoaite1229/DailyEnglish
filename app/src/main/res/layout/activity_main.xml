@@ -11,23 +11,6 @@
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-
-        <Button
-            android:id="@+id/alarmbutton"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_weight="1"
-            android:background="@drawable/ic_add_alert_black_24dp"
-            tools:layout_editor_absoluteY="8dp"
-            tools:layout_editor_absoluteX="0dp" />
-
-
-    </android.support.constraint.ConstraintLayout>
-
-    <android.support.constraint.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
         <include
             layout="@layout/content_main"
             android:layout_width="match_parent"
@@ -38,14 +21,30 @@
             app:layout_constraintRight_toRightOf="parent" />
     </android.support.constraint.ConstraintLayout>
 
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <FrameLayout
+            android:id="@+id/alarmbtn"
+            android:layout_width="80dp"
+            android:layout_height="80dp">
+            <Button
+                android:id="@+id/alarmbutton"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:layout_gravity="center"
+                android:clickable="false"
+                android:background="@drawable/ic_alarm_add_black_24dp"
+                android:alpha="0.41" />
+        </FrameLayout>
+    </android.support.constraint.ConstraintLayout>
+
     <android.support.design.widget.NavigationView
         android:id="@+id/nav_view"
-        android:layout_width="wrap_content"
-        android:layout_height="15dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
         android:visibility="invisible"
-        app:menu="@menu/activity_main_drawer"
-        tools:layout_editor_absoluteY="8dp"
-        tools:layout_editor_absoluteX="0dp" />
+        app:menu="@menu/activity_main_drawer" />
 </android.support.v4.widget.DrawerLayout>

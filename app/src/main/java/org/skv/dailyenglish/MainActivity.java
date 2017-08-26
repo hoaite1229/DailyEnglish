@@ -23,6 +23,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -112,7 +113,7 @@ public class MainActivity extends AppCompatActivity
 
         processFile(context);
 
-        MobileAds.initialize(this, "");
+        MobileAds.initialize(this, "ca-app-pub-7349766351233801~5632060046");
 
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
@@ -145,7 +146,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        Button alarmButton = (Button) findViewById(R.id.alarmbutton);
+        FrameLayout alarmButton = (FrameLayout) findViewById(R.id.alarmbtn);
         alarmButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -230,7 +231,7 @@ public class MainActivity extends AppCompatActivity
             } else {
                 NativeExpressAdView adView = (NativeExpressAdView)rootView.findViewById(R.id.adView);
 
-                AdRequest request = new AdRequest.Builder().build();
+                AdRequest request = new AdRequest.Builder().addTestDevice("69F251E2F7BD78FEED580BB08B5465B9").build();
                 adView.loadAd(request);
 
                 adView.setAdListener(new AdListener() {

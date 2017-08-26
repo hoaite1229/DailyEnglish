@@ -50,7 +50,6 @@ public class TimePickerFragment extends DialogFragment implements TimePickerDial
         mTimePickerDialog = new TimePickerDialog(
                 getContext(), AlertDialog.THEME_HOLO_DARK, this, hour, min, DateFormat.is24HourFormat(getContext())
         );
-        mTimePickerDialog.setCancelable(true);
         mTimePickerDialog.setCanceledOnTouchOutside(true);
 
         mTimePickerDialog.setButton(TimePickerDialog.BUTTON_POSITIVE, "SAVE", new DialogInterface.OnClickListener() {
