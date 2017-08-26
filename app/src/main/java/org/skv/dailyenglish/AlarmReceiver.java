@@ -26,9 +26,9 @@ public class AlarmReceiver extends WakefulBroadcastReceiver {
     @Override
     public void onReceive(final Context context, Intent intent) {
         Log.i("AlarmReceiver", "onReceive Alarm!!");
-        //this will sound the alarm tone
-        //this will sound the alarm once, if you wish to
-        //raise alarm in loop continuously then use MediaPlayer and setLooping(true)
+        // this will sound the alarm tone
+        // this will sound the alarm once, if you wish to
+        // raise alarm in loop continuously then use MediaPlayer and setLooping(true)
         Uri alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
         if (alarmUri == null) {
             alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
@@ -37,17 +37,17 @@ public class AlarmReceiver extends WakefulBroadcastReceiver {
         if (!ringtone.isPlaying())
             ringtone.play();
 
-        //this will send a notification message
+        // this will send a notification message
         ComponentName comp = new ComponentName(context.getPackageName(),
                 AlarmService.class.getName());
         startWakefulService(context, (intent.setComponent(comp)));
         setResultCode(Activity.RESULT_OK);
 
-        //this will update the UI with message
-        // MainActivity inst = MainActivity.instance();
-        // if (inst != null) {
-        //     inst.dialogSimple();
-        // }
+        // this will update the UI with message
+        MainActivity inst = MainActivity.instance();
+        if (inst != null) {
+            inst.dialogSimple();
+        }
     }
 
     public static void stopRinging() {

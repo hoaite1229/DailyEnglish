@@ -15,9 +15,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -107,8 +105,8 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        // Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        // setSupportActionBar(toolbar);
 
         context = this;
 
@@ -125,12 +123,6 @@ public class MainActivity extends AppCompatActivity
         mViewPager.setAdapter(mSectionsPagerAdapter);
         mViewPager.setCurrentItem(1);
         mViewPager.addOnPageChangeListener(new CircularViewPagerHandler(mViewPager));
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
-        toggle.syncState();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -152,12 +144,23 @@ public class MainActivity extends AppCompatActivity
                 mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1);
             }
         });
+
+        Button alarmButton = (Button) findViewById(R.id.alarmbutton);
+        alarmButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.i("DailyEnglish", "ALARM BUTTON CLICK !!");
+                TimePickerFragment mTimePickerFragment = new TimePickerFragment();
+                mTimePickerFragment.setActivity(MainActivity.inst);
+                mTimePickerFragment.show(getSupportFragmentManager(), "FRAGMENT_TAG");
+            }
+        });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.i("keviny", "call onResume");
+        Log.i("DailyEnglish", "call onResume");
     }
 
     @Override
@@ -340,19 +343,7 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
-        } else if (id == R.id.nav_alarm) {
+        if (id == R.id.nav_alarm) {
             Log.i("DailyEnglish", "ALARM BUTTON CLICK !!");
             TimePickerFragment mTimePickerFragment = new TimePickerFragment();
             mTimePickerFragment.setActivity(this);
@@ -390,7 +381,6 @@ public class MainActivity extends AppCompatActivity
                         // Action for 'Yes' Button
                         Log.i("DailyEnglish", "Alarm Off 111 ");
                         AlarmReceiver.stopRinging();
-
                     }
                 });
         AlertDialog alert = alt_bld.create();
